@@ -14,12 +14,12 @@ def handle_error(resp, ok_status=()):
 
 class APIClient(object):
     def __init__(self, url, company, username, password):
+        self.url = url
         self.company = company
         self.username = username
         self.password = password
 
     def send_post(operation, arguments={}):
-        url = OPERATION_URLS.get(operation)
         parameters = {
             #API call and authentication:
             'username':             self.username,
@@ -30,7 +30,7 @@ class APIClient(object):
         parameters.update(arguments)
 
         conn = httplib.HTTPSConnection(HOST)
-        conn.putrequest("POST", url)
+        conn.putrequest("POST", self.url)
 
         conn.connect()
         conn.putheader('Content-Type', 'application/x-www-form-urlencoded')
