@@ -2,9 +2,15 @@ import os, os.path, httplib, urllib
 
 HOST = "www.faxage.com"
 
-def handle_error(resp):
-    if resp.startswith('ERR'):
-        raise Exception(resp)
+def handle_error(resp, ok_status=[]):
+    status = resp.read(5)
+    for ok in ok_status:
+        if status == ok:
+            break
+    else:
+        if status.startswith('ERR'):
+            raise Exception(resp)
+    return status
 
 class APIClient(object):
     def __init__(self, url, company, username, password):
@@ -23,22 +29,22 @@ class APIClient(object):
         }
         parameters.update(arguments)
 
-        payload_length = 0
-        payload = []
-        for key, value in parameters.items():
-            item = '%s=%s' % (key, urllib.quote(value))
-            payload.append(item)
-            payload_length += len(item)
-        # account for & between items.
-        payload_length += len(payload) - 1
-
         conn = httplib.HTTPSConnection(HOST)
         conn.putrequest("POST", url)
 
         conn.connect()
         conn.putheader('Content-Type', 'application/x-www-form-urlencoded')
-        conn.putheader('Content-Length', payload_length)
         conn.endheaders()
-        conn.send('&'.join(payload))
-        resp = conn.getresponse()
-        return resp.read()
+        for i, name, value in enumerate(parameters.items()):
+            if i != 0:
+                conn.send('&')
+            conn.send('%s=' % name)
+            if callable(value):
+                while True:
+                    data = value()
+                    if not data:
+                        break
+                    conn.send(urllib.quote(data))
+            else:
+                conn.send(urllib.quote(value))
+        return conn.getresponse()

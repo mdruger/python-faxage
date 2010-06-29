@@ -42,20 +42,21 @@ class FaxClient(APIClient):
             file_obj = file(file_name, 'r')
         if not file_obj:
             raise Exception('Please provide file_name or file_obj!')
-        fax_data = file_obj.read()
-        fax_data_b64 = base64.b64encode(fax_data)
+        def chunk_fax_data():
+            fax_chunk = file_obj.read(8*1024)
+            return base64.b64encode(fax_chunk)
         document_name = os.path.basename(document)
-
         resp = self.send_post('sendfax', {
             'faxfilenames[]':           document_name,
-            'faxfiledata[]':            fax_data_b64,
+            'faxfiledata[]':            chunk_fax_data,
             'faxno':                    recip_fax,
             'recipname':                recip_name,
             'tagname':                  sender_name,
             'tagnumber':                sender_phone,
         })
-        handle_error(resp)
-        ignore, jobid = resp.split(':')
+        data = handle_error(resp)
+        data += resp.read()
+        ignore, jobid = data.split(':')
         return int(jobid.strip())
 
     def send_status(self, *jobids):
@@ -65,10 +66,11 @@ class FaxClient(APIClient):
             'jobids[]':                 jobid_list,
             'pagecount':                '1',
         })
-        if resp.startswith('ERR06'):
+        data = handle_error(resp, ok_status=('ERR06',))
+        if data.startswith('ERR11'):
             return results
-        handle_error(resp)
-        for line in resp.splitlines():
+        data += resp.read()
+        for line in data.splitlines():
             # jobid, commid, destname, destnum, shortstatus, longstatus, sendtime, completetime, xmittime, pagecount
             record = line.split('\t')
             results.append(
@@ -100,10 +102,11 @@ class FaxClient(APIClient):
             'filename':                 '1',
             'starttime':                '1',
         })
-        if resp.startswith('ERR11'):
+        data = handle_error(resp, ok_status=('ERR11', ))
+        if data.startswith('ERR11'):
             return results
-        handle_error(resp)
-        for line in resp.splitlines():
+        data += resp.read()
+        for line in data.splitlines():
             # recvid, recvdate, starttime, CID, DNIS, filename
             record = line.split('\t')
             results.append(
@@ -126,10 +129,13 @@ class FaxClient(APIClient):
         resp = self.send_post('getfax', {
             'faxid':                    jobid,
         })
-        handle_error(resp)
+        data = handle_error(resp)
         cont_disp = resp.getheader('content-disposition', False)
-        if cont_disp:
-            file_obj.write(resp)
+        while True:
+            file_obj.write(data)
+            data = resp.read(8*1024)
+            if not data:
+                break;
 
     def recv_delete(self, *jobids):
         for jobid in jobids:

@@ -13,8 +13,9 @@ class ProvisioningClient(APIClient):
 
     def list_area_codes(self):
         resp = self.send_post('listac')
-        handle_error(resp)
-        return resp.splitlines()
+        data = handle_error(resp)
+        data += resp.read()
+        return data.splitlines()
 
     def list_npa_nxx(self, area_code=None):
         results = []
@@ -22,7 +23,8 @@ class ProvisioningClient(APIClient):
         if area_code:
             arguments['ac'] = area_code
         resp = self.send_post('listnpanxx', arguments)
-        handle_error(resp)
+        data = handle_error(resp)
+        data += resp.read()
         for line in resp.splitlines():
             # rc, rcstate
             record = line.split('\t')
@@ -40,7 +42,9 @@ class ProvisioningClient(APIClient):
         if npa_nxx:
             arguments['npanxx'] = npa_nxx
         resp = self.send_post('listdids', arguments)
-        return resp.splitlines()
+        data = handle_error(resp)
+        data += resp.read()
+        return data.splitlines()
 
     def allocate(self, *dids):
         for did in dids:
