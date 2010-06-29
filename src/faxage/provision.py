@@ -2,7 +2,7 @@ from faxage import APIClient, handle_error
 
 PROVISION_URL = '/new_provision.php'
 
-class NPANXXResult(object):
+class NPA_NXXResult(object):
     def __init__(self, region, state):
         self.region = region
         self.state = state
@@ -27,7 +27,7 @@ class ProvisioningClient(APIClient):
             # rc, rcstate
             record = line.split('\t')
             results.append(
-                NPANXXStatus(
+                NPA_NXXStatus(
                     record[0],
                     record[1],
                 )
