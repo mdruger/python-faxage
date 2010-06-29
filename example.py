@@ -62,7 +62,7 @@ if __name__ == '__main__':
     if not options.document:
         parser.error('You must supply a document to fax using the --document argument.')
     if not options.username or not options.company or not options.password:
-        parser.error('You must supply a username, company and password using to access the FAXAGE API.')
+        parser.error('You must supply a username, company and password to access the FAXAGE API.')
     if not options.recipient:
         parser.error('You must supply a fax number using the --recipient argument.')
 
