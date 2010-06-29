@@ -2,7 +2,7 @@ import os, os.path, httplib, urllib
 
 HOST = "www.faxage.com"
 
-def handle_error(resp, ok_status=[]):
+def handle_error(resp, ok_status=()):
     if resp.status != 200:
         raise Exception(resp.reason)
     status = resp.read(5)

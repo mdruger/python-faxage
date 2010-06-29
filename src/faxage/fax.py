@@ -67,7 +67,7 @@ class FaxClient(APIClient):
             'pagecount':                '1',
         })
         data = handle_error(resp, ok_status=('ERR06',))
-        if data.startswith('ERR11'):
+        if data.startswith('ERR06'):
             return results
         data += resp.read()
         for line in data.splitlines():
