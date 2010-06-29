@@ -37,8 +37,12 @@ class FaxClient(APIClient):
     def __init__(self, company, username, password):
         super(FaxClient, self).__init__(FAX_URL, company, username, password)
 
-    def send_fax(self, document, recip_fax, recip_name='', sender_name='', sender_phone=''):
-        fax_data = file(document, 'r').read()
+    def send_fax(self, recip_fax, recip_name='', sender_name='', sender_phone='', file_name=None, file_obj=None):
+        if file_name:
+            file_obj = file(file_name, 'r')
+        if not file_obj:
+            raise Exception('Please provide file_name or file_obj!')
+        fax_data = file_obj.read()
         fax_data_b64 = base64.b64encode(fax_data)
         document_name = os.path.basename(document)
 
@@ -117,6 +121,8 @@ class FaxClient(APIClient):
     def recv_fax(self, jobid, file_obj=None, file_name=None):
         if file_name:
             file_obj = open('file_name', 'w')
+        if not file_obj:
+            raise Exception('Please provide file_name or file_obj!')
         resp = self.send_post('getfax', {
             'faxid':                    jobid,
         })
