@@ -3,13 +3,13 @@ import os, os.path, httplib, urllib
 HOST = "www.faxage.com"
 
 def handle_error(resp, ok_status=[]):
+    if resp.status != 200:
+        raise Exception(resp.reason)
     status = resp.read(5)
-    for ok in ok_status:
-        if status == ok:
-            break
-    else:
+    if status not in ok_status:
         if status.startswith('ERR'):
-            raise Exception(resp)
+            status += resp.read()
+            raise Exception(status)
     return status
 
 class APIClient(object):
