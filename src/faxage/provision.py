@@ -1,15 +1,12 @@
 from faxage import APIClient, handle_error
 
-PROVISION_URL = '/new_provision.php'
-
 class NPA_NXXResult(object):
     def __init__(self, region, state):
         self.region = region
         self.state = state
 
 class ProvisioningClient(APIClient):
-    def __init__(self, company, username, password):
-        super(FaxClient, self).__init__(PROVISION_URL, company, username, password)
+    URL = '/new_provision.php'
 
     def list_area_codes(self):
         resp = self.send_post('listac')

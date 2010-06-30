@@ -1,8 +1,6 @@
-import time, base64
+import os, time, base64
 from datetime import timedelta, datetime
 from faxage import APIClient, handle_error
-
-FAX_URL = '/httpsfax.php'
 
 def make_delta(str):
     h, m, s = str.split(':')
@@ -34,21 +32,17 @@ class RecvJobStatus(object):
         self.filename = filename
 
 class FaxClient(APIClient):
-    def __init__(self, company, username, password):
-        super(FaxClient, self).__init__(FAX_URL, company, username, password)
+    URL = '/httpsfax.php'
 
-    def send_fax(self, recip_fax, recip_name='', sender_name='', sender_phone='', file_name=None, file_obj=None):
-        if file_name:
-            file_obj = file(file_name, 'r')
+    def send_fax(self, recip_fax, file_name, recip_name='', sender_name='', sender_phone='', file_obj=None):
         if not file_obj:
-            raise Exception('Please provide file_name or file_obj!')
-        def chunk_fax_data():
-            fax_chunk = file_obj.read(8*1024)
-            return base64.b64encode(fax_chunk)
-        document_name = os.path.basename(document)
+            file_obj = file(file_name, 'r')
+        fax_data = file_obj.read()
+        fax_data_b64 = base64.b64encode(fax_data)
+        document_name = os.path.basename(file_name)
         resp = self.send_post('sendfax', {
             'faxfilenames[]':           document_name,
-            'faxfiledata[]':            chunk_fax_data,
+            'faxfiledata[]':            fax_data_b64,
             'faxno':                    recip_fax,
             'recipname':                recip_name,
             'tagname':                  sender_name,
@@ -131,11 +125,7 @@ class FaxClient(APIClient):
         })
         data = handle_error(resp)
         cont_disp = resp.getheader('content-disposition', False)
-        while True:
-            file_obj.write(data)
-            data = resp.read(8*1024)
-            if not data:
-                break;
+        file_obj.write(resp.read())
 
     def recv_delete(self, *jobids):
         for jobid in jobids:
