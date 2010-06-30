@@ -80,18 +80,18 @@ class TestFaxClient(unittest.TestCase):
             port        = LOCAL_SERVER_PORT
         )
         try:
-            badclient.send_fax(FAX_NO, TEST_PDF_FILE)
+            badclient.send_fax(FAX_NO, (TEST_PDF_FILE, ))
         except Exception, e:
             self.assertEqual(str(e), 'ERR02: Login incorrect')
         else:
             self.fail('Invalid credentials did not result in an error.')
 
     def testSendFax(self):
-        self.client.send_fax(FAX_NO, TEST_PDF_FILE)
+        self.client.send_fax(FAX_NO, (TEST_PDF_FILE, ))
 
     def testSendFaxWithFileObj(self):
         with file(TEST_PDF_FILE, 'r') as faxfile:
-            self.client.send_fax(FAX_NO, 'fax1.pdf', file_obj=faxfile)
+            self.client.send_fax(FAX_NO, ('fax1.pdf', ), file_objs=(faxfile, ))
 
 if __name__ == '__main__':
     server = TestHTTPServer((LOCAL_SERVER_ADDR, LOCAL_SERVER_PORT))

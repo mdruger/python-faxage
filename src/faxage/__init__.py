@@ -38,12 +38,17 @@ class APIClient(object):
         }
         parameters.update(arguments)
 
-        payload_length = 0
         payload = []
         for key, value in parameters.items():
-            item = '%s=%s' % (key, urllib.quote(value))
-            payload.append(item)
-            payload_length += len(item)
+            if isinstance(value, (list, tuple)):
+                for subvalue in value:
+                    item = '%s=%s' % (key, urllib.quote(subvalue))
+                    payload.append(item)
+            else:
+                item = '%s=%s' % (key, urllib.quote(value))
+                payload.append(item)
+        #get the size of all our payload items.
+        payload_length = sum(map(len, payload))
         # account for & between items.
         payload_length += len(payload) - 1
 

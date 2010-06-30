@@ -34,14 +34,18 @@ class RecvJobStatus(object):
 class FaxClient(APIClient):
     URL = '/httpsfax.php'
 
-    def send_fax(self, recip_fax, file_name, recip_name='', sender_name='', sender_phone='', file_obj=None):
-        if not file_obj:
-            file_obj = file(file_name, 'r')
-        fax_data = file_obj.read()
-        fax_data_b64 = base64.b64encode(fax_data)
-        document_name = os.path.basename(file_name)
+    def send_fax(self, recip_fax, file_names, recip_name='', sender_name='', sender_phone='', file_objs=None):
+        if not file_objs:
+            file_objs = []
+            for file_name in file_names:
+                file_objs.append(file(file_name, 'r'))
+        fax_data_b64 = []
+        for file_obj in file_objs:
+            fax_data = file_obj.read()
+            fax_data_b64.append(base64.b64encode(fax_data))
+        document_names = map(os.path.basename, file_names)
         resp = self.send_post('sendfax', {
-            'faxfilenames[]':           document_name,
+            'faxfilenames[]':           document_names,
             'faxfiledata[]':            fax_data_b64,
             'faxno':                    recip_fax,
             'recipname':                recip_name,
