@@ -23,7 +23,7 @@ class APIClient(object):
         self.host = host or HOST
         if port is None and use_ssl:
             self.port = HTTPS_PORT
-        if port is None:
+        elif port is None:
             self.port = HTTP_PORT
         else:
             self.port = port
